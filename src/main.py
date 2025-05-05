@@ -1,6 +1,7 @@
 from nicegui import ui
 import json
 import os
+from services import EchoService
 
 # Load configuration
 def load_config():
@@ -17,6 +18,11 @@ def save_config(config):
 # Initialize configuration
 config = load_config()
 
+# Initialize chat services
+chat_services = {
+    'echo': EchoService()
+}
+
 # Initialize the UI
 ui.add_head_html('''
     <style>
@@ -25,27 +31,33 @@ ui.add_head_html('''
             overflow-y: auto;
             padding: 1rem;
             transition: background-color 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
         }
-
+        .message-row {
+            display: flex;
+            width: 100%;
+        }
         .message {
-            margin-bottom: 1rem;
             padding: 1rem;
             border-radius: 0.5rem;
             transition: background-color 0.3s, color 0.3s;
+            max-width: 80%;
+            width: fit-content;
+            word-break: break-word;
         }
-
         .user-message {
             background-color: #f0f0f0;
             margin-left: auto;
-            max-width: 80%;
+            margin-right: 0;
         }
-
         .assistant-message {
             background-color: #e3f2fd;
+            margin-left: 0;
             margin-right: auto;
-            max-width: 80%;
         }
-
         .input-container {
             position: fixed;
             bottom: 0;
@@ -54,15 +66,12 @@ ui.add_head_html('''
             border-top: 1px solid #e0e0e0;
             transition: background-color 0.3s, border-color 0.3s;
         }
-
         .dark .user-message {
             background-color: #2d2d2d;
         }
-
         .dark .assistant-message {
             background-color: #1a3a4a;
         }
-
         .dark .input-container {
             border-top: 1px solid #333;
         }
@@ -79,6 +88,34 @@ def toggle_theme(e):
 # Set initial theme
 ui.dark_mode(config['theme'] == 'dark')
 
+# Chat management
+messages = []
+current_service = 'echo'
+
+async def send_message():
+    input_text = input_textarea.value
+    if not input_text.strip():
+        return
+    # Add user message
+    messages.append({'role': 'user', 'content': input_text})
+    render_messages()
+    input_textarea.value = ''
+    # Get response from current service
+    service = chat_services[current_service]
+    response = await service.send_message(input_text)
+    # Add assistant message
+    messages.append({'role': 'assistant', 'content': response})
+    render_messages()
+
+def render_messages():
+    messages_container.clear()
+    with messages_container:
+        for msg in messages:
+            if msg['role'] == 'user':
+                ui.html(f'<div class="message-row" style="justify-content: flex-end;"><div class="message user-message">{msg["content"]}</div></div>')
+            else:
+                ui.html(f'<div class="message-row" style="justify-content: flex-start;"><div class="message assistant-message">{msg["content"]}</div></div>')
+
 # Create the main layout
 with ui.column().classes('w-full h-screen'):
     # Create tabs
@@ -90,17 +127,22 @@ with ui.column().classes('w-full h-screen'):
         # Chat tab
         with ui.tab_panel(chat_tab):
             with ui.card().classes('w-full h-full'):
+                # Service selection
+                with ui.row().classes('w-full p-2 gap-2 items-center'):
+                    ui.label('Service:')
+                    service_select = ui.select(
+                        {key: f"{service.name} - {service.description}" 
+                         for key, service in chat_services.items()},
+                        value=current_service,
+                        on_change=lambda e: setattr(globals(), 'current_service', e.value)
+                    ).classes('w-64')
                 # Chat messages container
-                with ui.column().classes('chat-container w-full'):
-                    # Messages will be added here dynamically
-                    pass
-                
+                messages_container = ui.html('<div class="chat-container"></div>')
                 # Input container
                 with ui.column().classes('input-container'):
                     with ui.row().classes('w-full items-center gap-2'):
-                        ui.textarea(placeholder='Type your message...').classes('w-full').props('outlined')
-                        ui.button('Send', icon='send').classes('h-full')
-
+                        input_textarea = ui.textarea(placeholder='Type your message...').classes('w-full').props('outlined')
+                        ui.button('Send', icon='send', on_click=send_message).classes('h-full')
         # Settings tab
         with ui.tab_panel(settings_tab):
             with ui.card().classes('w-full h-full'):
