@@ -59,10 +59,8 @@ ui.add_head_html('''
             margin-right: auto;
         }
         .input-container {
-            position: fixed;
-            bottom: 0;
             width: 100%;
-            padding: 1rem;
+            padding: 1rem 0 0 0;
             border-top: 1px solid #e0e0e0;
             transition: background-color 0.3s, border-color 0.3s;
         }
@@ -115,6 +113,11 @@ def render_messages():
                 ui.html(f'<div class="message-row" style="justify-content: flex-end;"><div class="message user-message">{msg["content"]}</div></div>')
             else:
                 ui.html(f'<div class="message-row" style="justify-content: flex-start;"><div class="message assistant-message">{msg["content"]}</div></div>')
+    # Auto-scroll to bottom
+    ui.run_javascript('''
+        var container = document.querySelector('.chat-container');
+        if (container) { container.scrollTop = container.scrollHeight; }
+    ''')
 
 # Create the main layout
 with ui.column().classes('w-full h-screen'):
@@ -137,11 +140,10 @@ with ui.column().classes('w-full h-screen'):
                     ).classes('w-64')
                 # Chat messages container
                 messages_container = ui.element('div').classes('chat-container')
-                # Input container
-                with ui.column().classes('input-container'):
-                    with ui.row().classes('w-full items-center gap-2'):
-                        input_textarea = ui.textarea(placeholder='Type your message...').classes('w-full').props('outlined')
-                        ui.button('Send', icon='send', on_click=send_message).classes('h-full')
+                # Input container as a row at the bottom of the card
+                with ui.row().classes('w-full items-end input-container').style('gap:8px; margin-top:24px;'):
+                    input_textarea = ui.textarea(placeholder='Type your message...').props('outlined').style('flex:1; min-width:0; min-height:40px; max-height:40px; height:40px;')
+                    ui.button('Send', icon='send', on_click=send_message).style('width:90px; min-width:80px; max-width:120px; height:40px;')
         # Settings tab
         with ui.tab_panel(settings_tab):
             with ui.card().classes('w-full h-full'):

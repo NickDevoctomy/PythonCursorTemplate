@@ -79,5 +79,93 @@ This document is a living reference for using [NiceGUI](https://nicegui.io/) in 
 
 ---
 
+# Layout Techniques & Patterns
+
+## Using Rows, Columns, and Grids
+- `ui.row()` and `ui.column()` are the primary layout containers. Use them to arrange elements horizontally or vertically.
+- You can nest rows and columns for complex layouts.
+- For more advanced layouts, use `ui.grid()` or custom CSS.
+
+**Example:**
+```python
+with ui.row():
+    with ui.column().style('flex: 2'):
+        ui.label('Main content')
+    with ui.column().style('flex: 1'):
+        ui.label('Sidebar')
+```
+
+## Responsive Design
+- Use Tailwind or Quasar classes for responsive layouts, e.g., `.classes('w-full md:w-1/2')`.
+- You can also use `.style('width: 100%')` or `.style('max-width: 600px')` for custom breakpoints.
+
+## Custom Page Frames with Context Managers
+- Create a reusable page frame using a context manager to ensure consistent headers, footers, and sidebars across pages.
+
+**Example:**
+```python
+from contextlib import contextmanager
+from nicegui import ui
+
+@contextmanager
+def frame(title: str):
+    with ui.header():
+        ui.label(title)
+    with ui.column().classes('p-4'):
+        yield
+    with ui.footer():
+        ui.label('Footer')
+```
+Usage:
+```python
+with frame('My Page'):
+    ui.label('Page content here')
+```
+
+## Multi-Page Apps
+- Use `@ui.page('/path')` decorators to define multiple pages.
+- You can create a menu or sidebar for navigation using `ui.link()`.
+
+## Sidebar and Drawer Layouts
+- Use `ui.left_drawer()` or `ui.right_drawer()` for collapsible sidebars.
+- Combine with `ui.header()` and `ui.footer()` for a classic app layout.
+
+## Sticky and Floating Elements
+- Use `ui.page_sticky()` to create floating action buttons or sticky elements.
+
+**Example:**
+```python
+with ui.page_sticky(position='bottom-right', x_offset=20, y_offset=20):
+    ui.button(icon='add')
+```
+
+## Controlling Widths and Spacing
+- Use Tailwind classes like `.classes('w-[50%]')` or `.classes('max-w-lg')` for width.
+- Use `.style('width: 50%')` for custom widths.
+- Use `.classes('gap-4')` or `.style('margin: 1em')` for spacing.
+
+## Custom CSS and Global Styles
+- You can inject global styles with `ui.add_head_html('<style>...</style>')`.
+- Be aware that Quasar and Tailwind may override some styles; use `!important` if needed.
+
+## Tips and Gotchas
+- Not all Tailwind or Quasar classes work on every element; check the docs or use `.style()` for custom CSS.
+- For inline elements (icon + label), use a `ui.row()` or set `display: flex` on a parent container.
+- To set an element's `id`, use `.props('id=myid')`.
+- For global font sizes or colors, set them in a `<style>` tag injected with `ui.add_head_html()`.
+
+---
+
+**References:**
+- [NiceGUI Layout Documentation](https://nicegui.io/documentation/section_page_layout)
+- [Community Example & Suggestions](https://github.com/zauberzeug/nicegui/discussions/1778)
+- [Tailwind Width Utilities](https://tailwindcss.com/docs/width)
+- [Modularization Example](https://github.com/zauberzeug/nicegui/tree/main/examples/modularization)
+
+---
+
+**Note:**  
+This section will be updated as more layout patterns and best practices are discovered. If you find a new layout trick or pattern, please add it here!
+
 **Note:**
 This document is continuously updated as new features, patterns, and best practices are discovered. If you encounter a new pattern or solution, please add it here! 
