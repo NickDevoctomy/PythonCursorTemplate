@@ -109,8 +109,8 @@ async def send_message():
 
 def render_messages():
     messages_container.clear()
-    with messages_container:
-        for msg in messages:
+    for msg in messages:
+        with messages_container:
             if msg['role'] == 'user':
                 ui.html(f'<div class="message-row" style="justify-content: flex-end;"><div class="message user-message">{msg["content"]}</div></div>')
             else:
@@ -131,13 +131,12 @@ with ui.column().classes('w-full h-screen'):
                 with ui.row().classes('w-full p-2 gap-2 items-center'):
                     ui.label('Service:')
                     service_select = ui.select(
-                        {key: f"{service.name} - {service.description}" 
-                         for key, service in chat_services.items()},
+                        {key: service.description for key, service in chat_services.items()},
                         value=current_service,
                         on_change=lambda e: setattr(globals(), 'current_service', e.value)
                     ).classes('w-64')
                 # Chat messages container
-                messages_container = ui.html('<div class="chat-container"></div>')
+                messages_container = ui.element('div').classes('chat-container')
                 # Input container
                 with ui.column().classes('input-container'):
                     with ui.row().classes('w-full items-center gap-2'):

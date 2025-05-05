@@ -9,7 +9,7 @@ class EchoService(ChatService):
     
     @property
     def description(self) -> str:
-        return "Echoes back whatever message you send"
+        return "Echo service"
     
     async def send_message(self, message: str) -> str:
         return message 
