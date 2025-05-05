@@ -27,7 +27,6 @@ chat_services = {
 ui.add_head_html('''
     <style>
         .chat-container {
-            height: calc(100vh - 200px);
             overflow-y: auto;
             padding: 1rem;
             transition: background-color 0.3s;
@@ -91,13 +90,13 @@ messages = []
 current_service = 'echo'
 
 async def send_message():
-    input_text = input_textarea.value
+    input_text = input_box.value
     if not input_text.strip():
         return
     # Add user message
     messages.append({'role': 'user', 'content': input_text})
     render_messages()
-    input_textarea.value = ''
+    input_box.value = ''
     # Get response from current service
     service = chat_services[current_service]
     response = await service.send_message(input_text)
@@ -120,15 +119,13 @@ def render_messages():
     ''')
 
 # Create the main layout
-with ui.column().classes('w-full h-screen'):
+with ui.column().classes('h-screen w-full'):
     # Create tabs
     with ui.tabs().classes('w-full') as tabs:
         chat_tab = ui.tab('Chat')
         settings_tab = ui.tab('Settings')
-    
-    with ui.tab_panels(tabs, value=chat_tab).classes('w-full h-full'):
-        # Chat tab
-        with ui.tab_panel(chat_tab):
+    with ui.tab_panels(tabs, value=chat_tab).classes('h-full w-full'):
+        with ui.tab_panel(chat_tab).classes('h-full w-full'):
             with ui.card().classes('w-full h-full'):
                 # Service selection
                 with ui.row().classes('w-full p-2 gap-2 items-center'):
@@ -138,12 +135,15 @@ with ui.column().classes('w-full h-screen'):
                         value=current_service,
                         on_change=lambda e: setattr(globals(), 'current_service', e.value)
                     ).classes('w-64')
-                # Chat messages container
-                messages_container = ui.element('div').classes('chat-container')
-                # Input container as a row at the bottom of the card
-                with ui.row().classes('w-full items-end input-container').style('gap:8px; margin-top:24px;'):
-                    input_textarea = ui.textarea(placeholder='Type your message...').props('outlined').style('flex:1; min-width:0; min-height:40px; max-height:40px; height:40px;')
-                    ui.button('Send', icon='send', on_click=send_message).style('width:90px; min-width:80px; max-width:120px; height:40px;')
+                # Chat messages container (scrollable, flex-grow, fills all space above input)
+                messages_container = ui.element('div').classes('chat-container overflow-y-auto flex-grow').style('min-height:0; height:0;')
+                # Input row at the bottom
+                with ui.row().classes('w-full items-end').style('height: 48px;'):
+                    def handle_input_keydown(e):
+                        if e.args.get('key') == 'Enter':
+                            ui.timer(0.0, send_message, once=True)
+                    input_box = ui.input(placeholder='Type your message...').on('keydown', handle_input_keydown).classes('flex-grow').style('height:48px;')
+                    ui.button('Send', icon='send', on_click=send_message).style('width:90px; height:48px;')
         # Settings tab
         with ui.tab_panel(settings_tab):
             with ui.card().classes('w-full h-full'):

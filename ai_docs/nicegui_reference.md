@@ -168,4 +168,37 @@ with ui.page_sticky(position='bottom-right', x_offset=20, y_offset=20):
 This section will be updated as more layout patterns and best practices are discovered. If you find a new layout trick or pattern, please add it here!
 
 **Note:**
-This document is continuously updated as new features, patterns, and best practices are discovered. If you encounter a new pattern or solution, please add it here! 
+This document is continuously updated as new features, patterns, and best practices are discovered. If you encounter a new pattern or solution, please add it here!
+
+---
+
+# Handling Enter/Return Key Events in Input Fields
+
+## Pattern: Subscribing to Keydown Events
+
+NiceGUI's `ui.input` does not support an `on_return` parameter. To trigger an action (such as sending a chat message) when the user presses Enter/Return, use the `.on('keydown', handler)` method and check the event arguments for the Enter key.
+
+**Example:**
+```python
+from nicegui import ui
+
+async def send_message():
+    # Your send logic here
+    pass
+
+def handle_input_keydown(e):
+    if e.args.get('key') == 'Enter':
+        ui.timer(0.0, send_message, once=True)
+
+input_box = ui.input(placeholder='Type your message...').on('keydown', handle_input_keydown)
+```
+
+- The event handler receives a `GenericEventArguments` object.
+- The pressed key is available as `e.args['key']`.
+- Compare with `'Enter'` to detect the Enter/Return key.
+- Use `ui.timer(0.0, coroutine, once=True)` to run an async function from a sync context.
+- The `once=True` parameter ensures the timer only runs once and doesn't create a recurring timer.
+
+**References:**
+- [NiceGUI GitHub Discussion: Subscribe to keyboard event from select #3216](https://github.com/zauberzeug/nicegui/discussions/3216)
+- [NiceGUI Documentation](https://nicegui.io/documentation/input) 
